@@ -66,14 +66,21 @@ export default {
 				banking: {
 					purple: "#9b87f5",
 					darkPurple: "#7E69AB",
-					darkBg: "#1A1F2C",
+					darkBg: "#0a0e1a",
 					lightPurple: "#D6BCFA",
 					blue: "#1EAEDB",
 					skyBlue: "#33C3F0",
 					charcoal: "#403E43",
 					white: "#FFFFFF",
-					darkGray: "#221F26",
+					darkGray: "#141824",
 					silver: "#9F9EA1"
+				},
+				portfolio: {
+					gain: "#10b981",
+					loss: "#ef4444",
+					neutral: "#6b7280",
+					highlight: "#3b82f6",
+					warning: "#f59e0b"
 				}
 			},
 			borderRadius: {
