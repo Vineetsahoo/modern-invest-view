@@ -1,73 +1,99 @@
-# Welcome to your Lovable project
+# Investment Portfolio Manager
 
-## Project info
+A comprehensive stock portfolio management platform for tracking investments, analyzing performance, and managing your financial portfolio.
 
-**URL**: https://lovable.dev/projects/327683da-1970-4851-9553-3ad811184c3b
+## Features
 
-## How can I edit this code?
+-  **Dashboard**: Real-time investment portfolio overview with detailed statistics
+-  **Analytics**: Comprehensive charts and performance metrics
+-  **Multi-Asset Support**: Manage stocks, mutual funds, REITs, NPS, FD/RD, SGB, and Demat accounts
+-  **Secure Authentication**: Built with Supabase for secure user authentication
+-  **Responsive Design**: Modern, mobile-friendly interface
+-  **Beautiful UI**: Built with shadcn/ui and Tailwind CSS
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **Backend**: Supabase (Authentication & Database)
+- **Charts**: Recharts
+- **State Management**: TanStack Query (React Query)
+- **Routing**: React Router v6
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/327683da-1970-4851-9553-3ad811184c3b) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js (v16 or higher)
+- npm or yarn or bun
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd modern-invest-view
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Build for Production
 
-**Use GitHub Codespaces**
+```sh
+# Create production build
+npm run build
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Preview production build
+npm run preview
+```
 
-## What technologies are used for this project?
+## Project Structure
 
-This project is built with:
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   └── profile/        # Profile-related components
+├── hooks/              # Custom React hooks
+├── integrations/       # External service integrations
+│   └── supabase/       # Supabase client and types
+├── lib/                # Utility functions
+├── pages/              # Page components
+├── services/           # API services
+└── utils/              # Helper utilities
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Configuration
 
-## How can I deploy this project?
+### Environment Variables
 
-Simply open [Lovable](https://lovable.dev/projects/327683da-1970-4851-9553-3ad811184c3b) and click on Share -> Publish.
+Create a `.env` file in the root directory:
 
-## Can I connect a custom domain to my Lovable project?
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-Yes, you can!
+## Available Scripts
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run lint` - Run ESLint
+- `npm run preview` - Preview production build
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## License
+
+MIT License
+
+## Support
+
+For support, please open an issue in the GitHub repository.
