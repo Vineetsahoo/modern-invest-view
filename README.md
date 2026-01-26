@@ -31,7 +31,7 @@ A comprehensive stock portfolio management platform for tracking investments, an
 
 ```sh
 # Clone the repository
-git clone <YOUR_GIT_URL>
+git clone (https://github.com/Vineetsahoo/modern-invest-view)
 
 # Navigate to the project directory
 cd modern-invest-view
