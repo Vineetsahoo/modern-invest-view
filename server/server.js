@@ -10,6 +10,12 @@ const portfolioRoutes = require('./routes/portfolioRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const watchlistRoutes = require('./routes/watchlistRoutes');
 const quoteRoutes = require('./routes/quoteRoutes');
+const historicalPriceRoutes = require('./routes/historicalPriceRoutes');
+const snapshotRoutes = require('./routes/snapshotRoutes');
+const alertRoutes = require('./routes/alertRoutes');
+
+// Scheduled jobs
+const { initScheduledJobs } = require('./jobs/scheduledJobs');
 
 // Initialize app
 const app = express();
@@ -36,8 +42,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/investments', investmentRoutes);
 app.use('/api/portfolios', portfolioRoutes);
 app.use('/api/portfolios/:portfolioId/transactions', transactionRoutes);
+app.use('/api/portfolios/:portfolioId/snapshots', snapshotRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/quotes', quoteRoutes);
+app.use('/api/prices', historicalPriceRoutes);
+app.use('/api/alerts', alertRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -67,4 +76,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 API available at http://localhost:${PORT}/api`);
+  
+  // Initialize scheduled jobs
+  initScheduledJobs();
 });

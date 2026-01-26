@@ -115,6 +115,69 @@ export const quotesAPI = {
   }
 };
 
+// Historical Prices API
+export const historicalPricesAPI = {
+  getHistory: async (symbol: string, period: string = '6M') => {
+    const response = await api.get(`/prices/${symbol}/history`, { params: { period } });
+    return response.data;
+  },
+  updatePrices: async (symbols: string[]) => {
+    const response = await api.post('/prices/update', { symbols });
+    return response.data;
+  }
+};
+
+// Portfolio Snapshots API
+export const snapshotsAPI = {
+  getSnapshots: async (portfolioId: string, period: string = '6M') => {
+    const response = await api.get(`/portfolios/${portfolioId}/snapshots`, { params: { period } });
+    return response.data;
+  },
+  createSnapshot: async (portfolioId: string, snapshotDate?: Date) => {
+    const response = await api.post(`/portfolios/${portfolioId}/snapshots`, { snapshotDate });
+    return response.data;
+  },
+  backfillSnapshots: async (portfolioId: string, days: number = 180) => {
+    const response = await api.post(`/portfolios/${portfolioId}/snapshots/backfill`, { days });
+    return response.data;
+  }
+};
+
+// Price Alerts API
+export const alertsAPI = {
+  getAlerts: async (active?: boolean, triggered?: boolean) => {
+    const response = await api.get('/alerts', { params: { active, triggered } });
+    return response.data;
+  },
+  createAlert: async (data: {
+    symbol: string;
+    alertType: string;
+    condition: string;
+    targetPrice?: number;
+    notificationMethod?: string;
+    message?: string;
+  }) => {
+    const response = await api.post('/alerts', data);
+    return response.data;
+  },
+  createFromWatchlist: async () => {
+    const response = await api.post('/alerts/from-watchlist');
+    return response.data;
+  },
+  updateAlert: async (id: string, data: any) => {
+    const response = await api.put(`/alerts/${id}`, data);
+    return response.data;
+  },
+  deleteAlert: async (id: string) => {
+    const response = await api.delete(`/alerts/${id}`);
+    return response.data;
+  },
+  checkAlerts: async () => {
+    const response = await api.post('/alerts/check');
+    return response.data;
+  }
+};
+
 // Investment API
 export const investmentAPI = {
   getAll: async (type?: string) => {

@@ -55,7 +55,33 @@ const transactionSchema = new mongoose.Schema({
   note: {
     type: String,
     trim: true
-  }
+  },
+  // Tax lot tracking for capital gains
+  taxLotId: {
+    type: String,
+    trim: true
+  },
+  taxMethod: {
+    type: String,
+    enum: ['FIFO', 'LIFO', 'SPECIFIC_ID', 'AVERAGE_COST'],
+    default: 'FIFO'
+  },
+  acquisitionDate: {
+    type: Date
+  },
+  // For SELL transactions - references to specific tax lots being sold
+  soldTaxLots: [{
+    taxLotId: String,
+    qty: Number,
+    costBasis: Number,
+    acquisitionDate: Date,
+    holdingPeriod: Number, // in days
+    capitalGainType: {
+      type: String,
+      enum: ['SHORT_TERM', 'LONG_TERM']
+    },
+    capitalGain: Number
+  }]
 }, {
   timestamps: true
 });
