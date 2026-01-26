@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/components/ui/use-toast';
 
 interface AMCDetailsProps {
@@ -25,28 +24,11 @@ export const AMCDetails: React.FC<AMCDetailsProps> = ({ amcDetails: defaultAmcDe
       
       setLoading(true);
       try {
-        const customerIdNumber = parseInt(customerId, 10);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Try to get customer-specific AMC data
-        // First check if there's a mapping table or relationship
-        // If not, just get an AMC entry and associate it with the customer
-        
-        const { data: amcData, error: amcError } = await supabase
-          .from('amc')
-          .select('*')
-          .limit(1)
-          .single();
-          
-        if (amcError) {
-          console.error("AMC fetch error:", amcError);
-          // Fallback to default data if user-specific data is not found
-        } else if (amcData) {
-          setAmcDetails({
-            amcId: amcData.amc_id.toString(),
-            name: amcData.name,
-            licenseId: amcData.license_id
-          });
-        }
+        // Mock data - in production, fetch from your API
+        setAmcDetails(defaultAmcDetails);
       } catch (error) {
         console.error("Error fetching AMC data:", error);
         toast({

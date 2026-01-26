@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/utils/formatters';
 
@@ -17,6 +16,31 @@ interface ReitData {
   dividend_yield: number;
 }
 
+// Mock data for demo
+const mockReitData: ReitData[] = [
+  {
+    reit_id: 1,
+    value: 250000,
+    country: 'India',
+    regulation: 'SEBI Regulated',
+    dividend_yield: 7.5
+  },
+  {
+    reit_id: 2,
+    value: 350000,
+    country: 'USA',
+    regulation: 'SEC Regulated',
+    dividend_yield: 6.8
+  },
+  {
+    reit_id: 3,
+    value: 180000,
+    country: 'Singapore',
+    regulation: 'MAS Regulated',
+    dividend_yield: 7.2
+  }
+];
+
 const ReitPage = () => {
   const [loading, setLoading] = useState(true);
   const [reitData, setReitData] = useState<ReitData[]>([]);
@@ -25,18 +49,11 @@ const ReitPage = () => {
     async function fetchReitData() {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('reit')
-          .select('*');
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        if (error) {
-          console.error("Error fetching REIT data:", error);
-          return;
-        }
-        
-        if (data) {
-          setReitData(data);
-        }
+        // Use mock data
+        setReitData(mockReitData);
       } catch (error) {
         console.error("Error in REIT data fetch:", error);
       } finally {

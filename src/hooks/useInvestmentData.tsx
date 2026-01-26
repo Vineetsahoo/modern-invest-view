@@ -1,19 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from "@/integrations/supabase/client";
 import { InvestmentStat } from '@/components/InvestmentStats';
-import { 
-  calculateTotalValue,
-  calculateAverageRate,
-  calculateTotalQuantity,
-  calculateSgbValue,
-  calculateTotalStockValue
-} from '@/utils/calculations';
-import { formatCurrency } from '@/utils/formatters';
+import { investmentAPI } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useInvestmentData = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [investmentStats, setInvestmentStats] = useState<InvestmentStat>({
     reit: { yield: "0%", holdings: "0" },
@@ -26,120 +20,72 @@ export const useInvestmentData = () => {
 
   useEffect(() => {
     async function fetchInvestmentData() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       
       try {
-        const customerId = sessionStorage.getItem('customer_id');
+        // Fetch stats from backend
+        const stats = await investmentAPI.getStats();
         
-        if (!customerId) {
+        // Transform backend stats to match the InvestmentStat interface
+        const newStats: InvestmentStat = {
+          reit: {
+            yield: stats.byType?.REIT ? 
+              `${((stats.byType.REIT.currentValue - stats.byType.REIT.totalInvestment) / stats.byType.REIT.totalInvestment * 100).toFixed(2)}%` : 
+              "0%",
+            holdings: stats.byType?.REIT ? `₹${stats.byType.REIT.currentValue.toLocaleString()}` : "₹0"
+          },
+          nps: {
+            value: stats.byType?.NPS ? `₹${stats.byType.NPS.currentValue.toLocaleString()}` : "₹0",
+            return: stats.byType?.NPS ? 
+              `${((stats.byType.NPS.currentValue - stats.byType.NPS.totalInvestment) / stats.byType.NPS.totalInvestment * 100).toFixed(2)}%` : 
+              "0%"
+          },
+          fdrd: {
+            value: stats.byType?.FD ? `₹${stats.byType.FD.currentValue.toLocaleString()}` : "₹0",
+            interest: stats.byType?.FD ? 
+              `${((stats.byType.FD.currentValue - stats.byType.FD.totalInvestment) / stats.byType.FD.totalInvestment * 100).toFixed(2)}%` : 
+              "0%"
+          },
+          sgb: {
+            quantity: stats.byType?.SGB ? `${stats.byType.SGB.count}` : "0",
+            value: stats.byType?.SGB ? `₹${stats.byType.SGB.currentValue.toLocaleString()}` : "₹0"
+          },
+          demat: {
+            holdings: stats.byType?.DEMAT ? `${stats.byType.DEMAT.count}` : "0",
+            value: stats.byType?.DEMAT ? `₹${stats.byType.DEMAT.currentValue.toLocaleString()}` : "₹0"
+          },
+          mutualFunds: {
+            value: stats.byType?.MUTUAL_FUND ? `₹${stats.byType.MUTUAL_FUND.currentValue.toLocaleString()}` : "₹0",
+            funds: stats.byType?.MUTUAL_FUND ? `${stats.byType.MUTUAL_FUND.count}` : "0"
+          }
+        };
+
+        setInvestmentStats(newStats);
+      } catch (error: any) {
+        console.error('Error fetching investment data:', error);
+        
+        // If not authorized, use default values
+        if (error.response?.status === 401) {
+          console.log('User not authorized, using default values');
+        } else {
           toast({
             variant: "destructive",
-            title: "Authentication Error",
-            description: "Could not find customer information",
+            title: "Error loading investments",
+            description: error.response?.data?.message || "Failed to fetch investment data",
           });
-          setLoading(false);
-          return;
         }
-
-        // Convert string customerId to number for database comparison
-        const customerIdNumber = parseInt(customerId, 10);
-        
-        // Fetch REIT data
-        const { data: reitData, error: reitError } = await supabase
-          .from('reit')
-          .select('dividend_yield');
-          
-        if (reitError) {
-          console.error("REIT error:", reitError);
-        }
-        
-        // Fetch NPS data for customer
-        const { data: npsData, error: npsError } = await supabase
-          .from('nps')
-          .select('*')
-          .eq('customer_id', customerIdNumber);
-          
-        if (npsError) {
-          console.error("NPS error:", npsError);
-        }
-        
-        // Fetch FD data
-        const { data: fdData, error: fdError } = await supabase
-          .from('fd')
-          .select('*');
-          
-        if (fdError) {
-          console.error("FD error:", fdError);
-        }
-        
-        // Fetch SGB data
-        const { data: sgbData, error: sgbError } = await supabase
-          .from('sgb')
-          .select('*');
-          
-        if (sgbError) {
-          console.error("SGB error:", sgbError);
-        }
-        
-        // Fetch stocks data
-        const { data: stocksData, error: stocksError } = await supabase
-          .from('stocks')
-          .select('*');
-          
-        if (stocksError) {
-          console.error("Stocks error:", stocksError);
-        }
-        
-        // Fetch mutual funds data
-        const { data: mutualFundsData, error: mutualFundsError } = await supabase
-          .from('mutual_funds')
-          .select('*');
-          
-        if (mutualFundsError) {
-          console.error("Mutual funds error:", mutualFundsError);
-        }
-        
-        // Process and set the data
-        setInvestmentStats({
-          reit: { 
-            yield: reitData?.length ? `${reitData[0].dividend_yield}%` : "7.2%", 
-            holdings: reitData?.length.toString() || "3" 
-          },
-          nps: { 
-            value: npsData?.length ? `₹${calculateTotalValue(npsData, 'contribution')}` : "₹4,85,000", 
-            return: "8.4%" 
-          },
-          fdrd: { 
-            value: fdData?.length ? `₹${calculateTotalValue(fdData, 'maturity_deposit')}` : "₹3,50,000", 
-            interest: fdData?.length ? `${calculateAverageRate(fdData, 'rate')}%` : "6.8%" 
-          },
-          sgb: { 
-            quantity: sgbData?.length ? `${calculateTotalQuantity(sgbData)}g` : "30g", 
-            value: sgbData?.length ? `₹${calculateSgbValue(sgbData)}` : "₹1,85,000" 
-          },
-          demat: { 
-            holdings: stocksData?.length.toString() || "18", 
-            value: stocksData?.length ? `₹${formatCurrency(calculateTotalStockValue(stocksData))}` : "₹7,25,000" 
-          },
-          mutualFunds: { 
-            value: "₹5,60,000", 
-            funds: mutualFundsData?.length.toString() || "7" 
-          }
-        });
-      } catch (error) {
-        console.error("Error fetching investment data:", error);
-        toast({
-          variant: "destructive",
-          title: "Data Loading Error",
-          description: "Failed to load investment data from database",
-        });
       } finally {
         setLoading(false);
       }
     }
-    
+
     fetchInvestmentData();
-  }, [toast]);
+  }, [user, toast]);
 
   return {
     loading,
