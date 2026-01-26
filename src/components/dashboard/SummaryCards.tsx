@@ -66,16 +66,16 @@ export const SummaryCards: React.FC<{ totals: Totals }> = ({ totals }) => {
       {cards.map((card) => {
         const Icon = card.icon;
         return (
-          <Card key={card.title} className="bg-gradient-to-br from-slate-900/70 to-slate-950/80 border border-slate-800/70">
+          <Card key={card.title} className="bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-slate-800/70 hover:border-slate-700/90 transition-all hover:scale-[1.02] group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-slate-200">{card.title}</CardTitle>
-              <span className={`p-2 rounded-lg bg-gradient-to-br ${card.tone}`}>
+              <span className={`p-2.5 rounded-xl bg-gradient-to-br ${card.tone} shadow-lg group-hover:scale-110 transition-transform`}>
                 <Icon className="h-4 w-4 text-white" />
               </span>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="text-2xl font-semibold text-white">{card.value}</div>
-              <Badge variant="outline" className="border-slate-700 text-slate-300 bg-slate-800/60">
+              <div className="text-2xl font-bold text-white">{card.value}</div>
+              <Badge variant="outline" className="border-slate-700 text-slate-300 bg-slate-800/60 text-xs">
                 {card.hint}
               </Badge>
             </CardContent>
