@@ -6,6 +6,10 @@ const connectDB = require('./config/db');
 // Route imports
 const authRoutes = require('./routes/authRoutes');
 const investmentRoutes = require('./routes/investmentRoutes');
+const portfolioRoutes = require('./routes/portfolioRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
+const watchlistRoutes = require('./routes/watchlistRoutes');
+const quoteRoutes = require('./routes/quoteRoutes');
 
 // Initialize app
 const app = express();
@@ -18,15 +22,22 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging middleware
+// Request logging middleware (avoid noisy undefined on GET)
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`, req.body);
+  const parts = [`${req.method} ${req.path}`];
+  if (Object.keys(req.query || {}).length) parts.push(`query=${JSON.stringify(req.query)}`);
+  if (req.method !== 'GET' && Object.keys(req.body || {}).length) parts.push(`body=${JSON.stringify(req.body)}`);
+  console.log(parts.join(' '));
   next();
 });
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/investments', investmentRoutes);
+app.use('/api/portfolios', portfolioRoutes);
+app.use('/api/portfolios/:portfolioId/transactions', transactionRoutes);
+app.use('/api/watchlist', watchlistRoutes);
+app.use('/api/quotes', quoteRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

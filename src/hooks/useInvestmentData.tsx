@@ -2,13 +2,16 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { InvestmentStat } from '@/components/InvestmentStats';
-import { investmentAPI } from '@/services/api';
+import { portfolioAPI } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useInvestmentData = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [portfolioId, setPortfolioId] = useState<string | null>(null);
+  const [portfolioStats, setPortfolioStats] = useState<any | null>(null);
+  const [refreshToken, setRefreshToken] = useState(0);
   const [investmentStats, setInvestmentStats] = useState<InvestmentStat>({
     reit: { yield: "0%", holdings: "0" },
     nps: { value: "₹0", return: "0%" },
@@ -26,50 +29,62 @@ export const useInvestmentData = () => {
       }
 
       setLoading(true);
-      
+
       try {
-        // Fetch stats from backend
-        const stats = await investmentAPI.getStats();
-        
-        // Transform backend stats to match the InvestmentStat interface
+        // Ensure a default portfolio exists
+        const portfolios = await portfolioAPI.list();
+        let chosen = portfolios[0];
+        if (!chosen) {
+          chosen = await portfolioAPI.create({ name: 'Main', baseCurrency: 'INR' });
+        }
+        setPortfolioId(chosen._id);
+
+        // Fetch stats for the chosen portfolio
+        const stats = await portfolioAPI.stats(chosen._id);
+        setPortfolioStats(stats);
+
+        const mapValue = (typeKey: string) => {
+          const bucket = stats.byAssetType?.[typeKey];
+          return bucket ? `₹${bucket.currentValue.toLocaleString()}` : '₹0';
+        };
+
+        const percent = (bucket: any) => {
+          if (!bucket || !bucket.currentValue || !bucket.invested) return '0%';
+          const base = bucket.invested || 1;
+          return `${(((bucket.currentValue - bucket.invested) / base) * 100).toFixed(2)}%`;
+        };
+
         const newStats: InvestmentStat = {
           reit: {
-            yield: stats.byType?.REIT ? 
-              `${((stats.byType.REIT.currentValue - stats.byType.REIT.totalInvestment) / stats.byType.REIT.totalInvestment * 100).toFixed(2)}%` : 
-              "0%",
-            holdings: stats.byType?.REIT ? `₹${stats.byType.REIT.currentValue.toLocaleString()}` : "₹0"
+            yield: percent(stats.byAssetType?.REIT),
+            holdings: mapValue('REIT')
           },
           nps: {
-            value: stats.byType?.NPS ? `₹${stats.byType.NPS.currentValue.toLocaleString()}` : "₹0",
-            return: stats.byType?.NPS ? 
-              `${((stats.byType.NPS.currentValue - stats.byType.NPS.totalInvestment) / stats.byType.NPS.totalInvestment * 100).toFixed(2)}%` : 
-              "0%"
+            value: mapValue('NPS'),
+            return: percent(stats.byAssetType?.NPS)
           },
           fdrd: {
-            value: stats.byType?.FD ? `₹${stats.byType.FD.currentValue.toLocaleString()}` : "₹0",
-            interest: stats.byType?.FD ? 
-              `${((stats.byType.FD.currentValue - stats.byType.FD.totalInvestment) / stats.byType.FD.totalInvestment * 100).toFixed(2)}%` : 
-              "0%"
+            value: mapValue('FD'),
+            interest: percent(stats.byAssetType?.FD)
           },
           sgb: {
-            quantity: stats.byType?.SGB ? `${stats.byType.SGB.count}` : "0",
-            value: stats.byType?.SGB ? `₹${stats.byType.SGB.currentValue.toLocaleString()}` : "₹0"
+            quantity: stats.byAssetType?.SGB ? `${stats.byAssetType.SGB.count}` : '0',
+            value: mapValue('SGB')
           },
           demat: {
-            holdings: stats.byType?.DEMAT ? `${stats.byType.DEMAT.count}` : "0",
-            value: stats.byType?.DEMAT ? `₹${stats.byType.DEMAT.currentValue.toLocaleString()}` : "₹0"
+            holdings: stats.byAssetType?.DEMAT ? `${stats.byAssetType.DEMAT.count}` : '0',
+            value: mapValue('DEMAT')
           },
           mutualFunds: {
-            value: stats.byType?.MUTUAL_FUND ? `₹${stats.byType.MUTUAL_FUND.currentValue.toLocaleString()}` : "₹0",
-            funds: stats.byType?.MUTUAL_FUND ? `${stats.byType.MUTUAL_FUND.count}` : "0"
+            value: mapValue('MF'),
+            funds: stats.byAssetType?.MF ? `${stats.byAssetType.MF.count}` : '0'
           }
         };
 
         setInvestmentStats(newStats);
       } catch (error: any) {
         console.error('Error fetching investment data:', error);
-        
-        // If not authorized, use default values
+
         if (error.response?.status === 401) {
           console.log('User not authorized, using default values');
         } else {
@@ -85,10 +100,14 @@ export const useInvestmentData = () => {
     }
 
     fetchInvestmentData();
-  }, [user, toast]);
+  }, [user, toast, refreshToken]);
 
   return {
     loading,
-    investmentStats
+    investmentStats,
+    portfolioId,
+    portfolioStats,
+    refresh: () => setRefreshToken((v) => v + 1),
+    refreshToken
   };
 };

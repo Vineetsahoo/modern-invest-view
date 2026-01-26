@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { investmentAPI } from '@/services/api';
+import { portfolioAPI } from '@/services/api';
 import { Plus, X } from 'lucide-react';
 
-export const AddInvestment: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) => {
+export const AddInvestment: React.FC<{ onSuccess?: () => void; portfolioId?: string | null }> = ({ onSuccess, portfolioId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -27,15 +27,29 @@ export const AddInvestment: React.FC<{ onSuccess?: () => void }> = ({ onSuccess 
     e.preventDefault();
     setLoading(true);
 
+    if (!portfolioId) {
+      toast({
+        variant: "destructive",
+        title: "No portfolio",
+        description: "Please refresh; portfolio not found yet.",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
-      await investmentAPI.create({
-        type: formData.type,
-        name: formData.name,
-        amount: parseFloat(formData.amount),
-        currentValue: parseFloat(formData.currentValue),
-        units: formData.units ? parseFloat(formData.units) : 0,
-        interestRate: formData.interestRate ? parseFloat(formData.interestRate) : 0,
-        notes: formData.notes
+      const qty = formData.units ? parseFloat(formData.units) : 1;
+      const amountNum = parseFloat(formData.amount);
+      const price = qty ? amountNum / qty : amountNum;
+
+      await portfolioAPI.addTransaction(portfolioId, {
+        symbol: formData.name.toUpperCase(),
+        assetType: formData.type,
+        type: 'BUY',
+        qty,
+        price,
+        fees: 0,
+        note: formData.notes
       });
 
       toast({
@@ -113,12 +127,14 @@ export const AddInvestment: React.FC<{ onSuccess?: () => void }> = ({ onSuccess 
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="EQUITY">Equity / Stock</SelectItem>
+                  <SelectItem value="ETF">ETF</SelectItem>
                   <SelectItem value="REIT">REIT</SelectItem>
-                  <SelectItem value="NPS">NPS</SelectItem>
+                  <SelectItem value="MF">Mutual Fund</SelectItem>
                   <SelectItem value="FD">Fixed Deposit</SelectItem>
                   <SelectItem value="SGB">Sovereign Gold Bond</SelectItem>
-                  <SelectItem value="DEMAT">Stocks (DEMAT)</SelectItem>
-                  <SelectItem value="MUTUAL_FUND">Mutual Fund</SelectItem>
+                  <SelectItem value="NPS">NPS</SelectItem>
+                  <SelectItem value="CRYPTO">Crypto</SelectItem>
                 </SelectContent>
               </Select>
             </div>

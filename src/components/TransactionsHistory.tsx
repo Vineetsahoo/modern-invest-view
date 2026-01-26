@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -6,39 +6,52 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Search, Calendar, ArrowUpDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { portfolioAPI } from '@/services/api';
+import { useToast } from '@/components/ui/use-toast';
 
 interface Transaction {
-  id: string;
-  date: string;
-  type: 'buy' | 'sell' | 'dividend';
+  _id: string;
+  tradeDate: string;
+  type: string;
   symbol: string;
-  quantity: number;
+  qty: number;
   price: number;
-  total: number;
-  status: 'completed' | 'pending' | 'cancelled';
+  fees?: number;
 }
 
-const mockTransactions: Transaction[] = [
-  { id: 'TXN001', date: '2026-01-24', type: 'buy', symbol: 'AAPL', quantity: 10, price: 185.92, total: 1859.20, status: 'completed' },
-  { id: 'TXN002', date: '2026-01-23', type: 'sell', symbol: 'MSFT', quantity: 5, price: 378.91, total: 1894.55, status: 'completed' },
-  { id: 'TXN003', date: '2026-01-22', type: 'dividend', symbol: 'GOOGL', quantity: 0, price: 0, total: 125.00, status: 'completed' },
-  { id: 'TXN004', date: '2026-01-20', type: 'buy', symbol: 'TSLA', quantity: 8, price: 248.42, total: 1987.36, status: 'completed' },
-  { id: 'TXN005', date: '2026-01-19', type: 'buy', symbol: 'NVDA', quantity: 3, price: 495.22, total: 1485.66, status: 'pending' },
-  { id: 'TXN006', date: '2026-01-18', type: 'sell', symbol: 'AMZN', quantity: 12, price: 151.94, total: 1823.28, status: 'completed' },
-];
-
-export const TransactionsHistory: React.FC = () => {
-  const [transactions] = useState<Transaction[]>(mockTransactions);
+export const TransactionsHistory: React.FC<{ portfolioId?: string | null; refreshToken?: number }> = ({ portfolioId, refreshToken }) => {
+  const { toast } = useToast();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchTxns = async () => {
+      if (!portfolioId) return;
+      setLoading(true);
+      try {
+        const data = await portfolioAPI.listTransactions(portfolioId);
+        setTransactions(data || []);
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Could not load transactions",
+          description: error?.response?.data?.message || 'Please try again.'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTxns();
+  }, [portfolioId, refreshToken, toast]);
 
   const filteredTransactions = transactions.filter(txn => {
     const matchesSearch = txn.symbol.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         txn.id.toLowerCase().includes(searchTerm.toLowerCase());
+                         txn._id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || txn.type === filterType;
-    const matchesStatus = filterStatus === 'all' || txn.status === filterStatus;
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesType;
   });
 
   const getTypeColor = (type: string) => {
@@ -50,17 +63,10 @@ export const TransactionsHistory: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-500/10 text-green-500';
-      case 'pending': return 'bg-yellow-500/10 text-yellow-500';
-      case 'cancelled': return 'bg-red-500/10 text-red-500';
-      default: return 'bg-gray-500/10 text-gray-500';
-    }
-  };
+  const totalValue = (txn: Transaction) => (txn.qty || 0) * (txn.price || 0) - (txn.fees || 0);
 
   return (
-    <Card>
+    <Card className="bg-slate-900/70 border border-slate-800/70">
       <CardHeader>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -70,7 +76,7 @@ export const TransactionsHistory: React.FC = () => {
             </CardTitle>
             <CardDescription>Complete record of all your portfolio transactions</CardDescription>
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" disabled>
             <Download className="h-4 w-4 mr-2" />
             Export CSV
           </Button>
@@ -98,17 +104,6 @@ export const TransactionsHistory: React.FC = () => {
               <SelectItem value="dividend">Dividend</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-full md:w-40">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="rounded-md border">
@@ -127,37 +122,31 @@ export const TransactionsHistory: React.FC = () => {
                 <TableHead className="text-right">Quantity</TableHead>
                 <TableHead className="text-right">Price</TableHead>
                 <TableHead className="text-right">Total</TableHead>
-                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredTransactions.map((txn) => (
-                <TableRow key={txn.id}>
-                  <TableCell className="font-medium">{txn.id}</TableCell>
-                  <TableCell>{new Date(txn.date).toLocaleDateString()}</TableCell>
+                <TableRow key={txn._id}>
+                  <TableCell className="font-medium">{txn._id.slice(-6)}</TableCell>
+                  <TableCell>{new Date(txn.tradeDate).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={getTypeColor(txn.type)}>
+                    <Badge variant="outline" className={getTypeColor(txn.type.toLowerCase())}>
                       {txn.type.toUpperCase()}
                     </Badge>
                   </TableCell>
                   <TableCell className="font-semibold">{txn.symbol}</TableCell>
-                  <TableCell className="text-right">{txn.quantity || '-'}</TableCell>
-                  <TableCell className="text-right">${txn.price.toFixed(2)}</TableCell>
-                  <TableCell className="text-right font-semibold">${txn.total.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className={getStatusColor(txn.status)}>
-                      {txn.status}
-                    </Badge>
-                  </TableCell>
+                  <TableCell className="text-right">{txn.qty || '-'}</TableCell>
+                  <TableCell className="text-right">₹{(txn.price || 0).toFixed(2)}</TableCell>
+                  <TableCell className="text-right font-semibold">₹{totalValue(txn).toFixed(2)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
 
-        {filteredTransactions.length === 0 && (
+        {(filteredTransactions.length === 0 || loading) && (
           <div className="text-center py-8 text-muted-foreground">
-            No transactions found matching your criteria
+            {loading ? 'Loading transactions…' : 'No transactions found'}
           </div>
         )}
       </CardContent>

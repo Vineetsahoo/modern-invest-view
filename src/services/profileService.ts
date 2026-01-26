@@ -1,5 +1,5 @@
 
-import { useToast } from '@/components/ui/use-toast';
+import { authAPI } from './api';
 
 export type CustomerData = {
   name: string;
@@ -26,72 +26,42 @@ export type RegulatoryDetails = {
   regulations: string;
 }
 
-// Mock data for demo
-const mockCustomerData = {
-  customer_id: 1,
-  name: 'John Doe',
-  pan: 'ABCDE1234F',
-  account_id: 'ACC001',
-  phone: '+91 9876543210'
-};
-
-const mockBranchData = {
-  branch_id: 'BR001',
-  name: 'Main Branch',
-  ifsc_code: 'ABCD0001234'
-};
-
-const mockAmcData = {
-  amc_id: 'AMC001',
-  name: 'Premium Asset Management',
-  license_id: 'LIC123456'
-};
-
-const mockRegulatoryData = {
-  regulatory_id: 'REG001',
-  name: 'SEBI',
-  country: 'India',
-  regulations: 'Securities and Exchange Board of India Regulations'
-};
-
 export async function fetchProfileData() {
-  // Get customer ID from session storage
-  const customerId = sessionStorage.getItem('customer_id');
-  
-  if (!customerId) {
-    throw new Error("Could not find customer information");
-  }
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // Return mock data
-  const customerData = mockCustomerData;
-  const branchData = mockBranchData;
-  const amcData = mockAmcData;
-  const regulatoryData = mockRegulatoryData;
+  try {
+    // Fetch current user profile from backend; authAPI adds token header automatically
+    const profile = await authAPI.getProfile();
 
-  return {
-    customerData: {
-      name: customerData?.name || "",
-      accountId: customerData?.account_id || 'No account found',
-      phone: customerData?.phone || ''
-    },
-    branchData: {
-      branchId: branchData.branch_id,
-      name: branchData.name,
-      ifscCode: branchData.ifsc_code
-    },
-    amcData: {
-      amcId: amcData.amc_id,
-      name: amcData.name,
-      licenseId: amcData.license_id
-    },
-    regulatoryData: {
-      regulatoryId: regulatoryData.regulatory_id,
-      name: regulatoryData.name,
-      country: regulatoryData.country,
-      regulations: regulatoryData.regulations
-    }
-  };
+    // Map backend profile to UI shape; use sensible fallbacks where data is optional
+    const customerData: CustomerData = {
+      name: profile.name || '',
+      accountId: profile._id || 'N/A',
+      phone: profile.phone || ''
+    };
+
+    // Placeholder data until branch/AMC/regulatory endpoints exist
+    const branchData: BranchDetails = {
+      branchId: profile.branchId || '—',
+      name: profile.branchName || '—',
+      ifscCode: profile.ifscCode || '—'
+    };
+
+    const amcData: AMCDetails = {
+      amcId: profile.amcId || '—',
+      name: profile.amcName || '—',
+      licenseId: profile.licenseId || '—'
+    };
+
+    const regulatoryData: RegulatoryDetails = {
+      regulatoryId: profile.regulatoryId || '—',
+      name: profile.regulator || '—',
+      country: profile.regulatorCountry || '—',
+      regulations: profile.regulations || '—'
+    };
+
+    return { customerData, branchData, amcData, regulatoryData };
+  } catch (error: any) {
+    // Surface backend error message when available
+    const message = error?.response?.data?.message || error?.message || 'Unable to load profile data';
+    throw new Error(message);
+  }
 }

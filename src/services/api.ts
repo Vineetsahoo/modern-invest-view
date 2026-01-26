@@ -63,6 +63,58 @@ export const authAPI = {
   },
 };
 
+// Portfolio API
+export const portfolioAPI = {
+  list: async () => {
+    const response = await api.get('/portfolios');
+    return response.data;
+  },
+  create: async (data: { name: string; baseCurrency?: string; cashBalance?: number }) => {
+    const response = await api.post('/portfolios', data);
+    return response.data;
+  },
+  stats: async (portfolioId: string) => {
+    const response = await api.get(`/portfolios/${portfolioId}/stats`);
+    return response.data;
+  },
+  addTransaction: async (portfolioId: string, data: any) => {
+    const response = await api.post(`/portfolios/${portfolioId}/transactions`, data);
+    return response.data;
+  },
+  listTransactions: async (portfolioId: string) => {
+    const response = await api.get(`/portfolios/${portfolioId}/transactions`);
+    return response.data;
+  }
+};
+
+// Watchlist API
+export const watchlistAPI = {
+  list: async () => {
+    const response = await api.get('/watchlist');
+    return response.data;
+  },
+  add: async (data: { symbol: string; note?: string; targetPrice?: number; stopPrice?: number; currency?: string }) => {
+    const response = await api.post('/watchlist', data);
+    return response.data;
+  },
+  update: async (id: string, data: any) => {
+    const response = await api.put(`/watchlist/${id}`, data);
+    return response.data;
+  },
+  remove: async (id: string) => {
+    const response = await api.delete(`/watchlist/${id}`);
+    return response.data;
+  }
+};
+
+// Quotes API (mockable)
+export const quotesAPI = {
+  get: async (symbols: string[]) => {
+    const response = await api.get('/quotes', { params: { symbols: symbols.join(',') } });
+    return response.data as Array<{ symbol: string; price: number; currency: string; asOf: string }>;
+  }
+};
+
 // Investment API
 export const investmentAPI = {
   getAll: async (type?: string) => {
