@@ -7,7 +7,7 @@ A comprehensive stock portfolio management platform for tracking investments, an
 -  **Dashboard**: Real-time investment portfolio overview with detailed statistics
 -  **Analytics**: Comprehensive charts and performance metrics
 -  **Multi-Asset Support**: Manage stocks, mutual funds, REITs, NPS, FD/RD, SGB, and Demat accounts
--  **Secure Authentication**: Built with Supabase for secure user authentication
+-  **Secure Authentication**: Session-based authentication system
 -  **Responsive Design**: Modern, mobile-friendly interface
 -  **Beautiful UI**: Built with shadcn/ui and Tailwind CSS
 
@@ -16,7 +16,6 @@ A comprehensive stock portfolio management platform for tracking investments, an
 - **Frontend**: React 18 with TypeScript
 - **Build Tool**: Vite
 - **Styling**: Tailwind CSS with shadcn/ui components
-- **Backend**: Supabase (Authentication & Database)
 - **Charts**: Recharts
 - **State Management**: TanStack Query (React Query)
 - **Routing**: React Router v6
@@ -64,8 +63,6 @@ src/
 │   ├── ui/             # shadcn/ui components
 │   └── profile/        # Profile-related components
 ├── hooks/              # Custom React hooks
-├── integrations/       # External service integrations
-│   └── supabase/       # Supabase client and types
 ├── lib/                # Utility functions
 ├── pages/              # Page components
 ├── services/           # API services
@@ -74,14 +71,7 @@ src/
 
 ## Configuration
 
-### Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
+No additional configuration required for local development.
 
 ## Available Scripts
 

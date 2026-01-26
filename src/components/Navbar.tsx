@@ -15,44 +15,71 @@ export const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-banking-darkBg/80 border-b border-white/10">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-b border-slate-700/50">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-8">
             <Link to="/dashboard" className="flex items-center group">
-              <div className="bg-gradient-to-br from-blue-500 to-purple-600 h-10 w-10 rounded-lg flex items-center justify-center mr-3 shadow-lg group-hover:shadow-xl transition-shadow">
-                <TrendingUp className="h-6 w-6 text-white" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                <div className="relative bg-gradient-to-br from-blue-500 to-purple-600 h-11 w-11 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105">
+                  <TrendingUp className="h-6 w-6 text-white" />
+                </div>
               </div>
-              <div>
-                <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+              <div className="ml-3">
+                <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                   Portfolio Manager
                 </span>
-                <div className="text-xs text-muted-foreground">Investment Tracking</div>
+                <div className="text-xs text-gray-400">Investment Tracking</div>
               </div>
             </Link>
 
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-1.5">
               <Link to="/dashboard">
                 <Button 
                   variant={isActive('/dashboard') ? 'secondary' : 'ghost'} 
                   size="sm"
-                  className={isActive('/dashboard') ? 'bg-blue-500/10 text-blue-400 hover:bg-blue-500/20' : ''}
+                  className={isActive('/dashboard') 
+                    ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 hover:from-blue-500/30 hover:to-purple-500/30 border border-blue-500/30' 
+                    : 'hover:bg-white/5'
+                  }
                 >
                   Dashboard
                 </Button>
               </Link>
               <Link to="/mutual-fund">
-                <Button variant={isActive('/mutual-fund') ? 'secondary' : 'ghost'} size="sm">
+                <Button 
+                  variant={isActive('/mutual-fund') ? 'secondary' : 'ghost'} 
+                  size="sm"
+                  className={isActive('/mutual-fund') 
+                    ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 hover:from-blue-500/30 hover:to-purple-500/30 border border-blue-500/30' 
+                    : 'hover:bg-white/5'
+                  }
+                >
                   Mutual Funds
                 </Button>
               </Link>
               <Link to="/reit">
-                <Button variant={isActive('/reit') ? 'secondary' : 'ghost'} size="sm">
+                <Button 
+                  variant={isActive('/reit') ? 'secondary' : 'ghost'} 
+                  size="sm"
+                  className={isActive('/reit') 
+                    ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 hover:from-blue-500/30 hover:to-purple-500/30 border border-blue-500/30' 
+                    : 'hover:bg-white/5'
+                  }
+                >
                   REITs
                 </Button>
               </Link>
               <Link to="/tax-details">
-                <Button variant={isActive('/tax-details') ? 'secondary' : 'ghost'} size="sm">
+                <Button 
+                  variant={isActive('/tax-details') ? 'secondary' : 'ghost'} 
+                  size="sm"
+                  className={isActive('/tax-details') 
+                    ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 hover:from-blue-500/30 hover:to-purple-500/30 border border-blue-500/30' 
+                    : 'hover:bg-white/5'
+                  }
+                >
                   Tax Details
                 </Button>
               </Link>
@@ -61,11 +88,11 @@ export const Navbar: React.FC = () => {
           
           <div className="flex items-center gap-3">
             {searchOpen ? (
-              <div className="relative animate-in fade-in slide-in-from-right">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="relative animate-slideIn">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search investments..."
-                  className="w-64 pl-9"
+                  className="w-64 pl-9 glass-card border-slate-600/50 focus:border-blue-500/50"
                   autoFocus
                   onBlur={() => setSearchOpen(false)}
                 />
@@ -75,28 +102,30 @@ export const Navbar: React.FC = () => {
                 variant="ghost" 
                 size="sm"
                 onClick={() => setSearchOpen(true)}
-                className="hover:bg-white/5"
+                className="hover:bg-white/5 hover:text-blue-400 transition-colors"
               >
                 <Search className="h-4 w-4" />
               </Button>
             )}
 
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="relative hover:bg-white/5"
-            >
-              <Bell className="h-4 w-4" />
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-xs">
+            <div className="relative">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="hover:bg-white/5 hover:text-blue-400 transition-colors"
+              >
+                <Bell className="h-4 w-4" />
+              </Button>
+              <div className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-xs font-bold text-white shadow-lg animate-glow">
                 3
-              </Badge>
-            </Button>
+              </div>
+            </div>
             
             <div className="relative">
               <Button 
                 variant="outline" 
                 onClick={() => setIsProfileOpen(!isProfileOpen)} 
-                className="border-white/10 bg-transparent hover:bg-white/5"
+                className="border-slate-600/50 bg-slate-800/30 hover:bg-slate-700/50 hover:border-blue-500/50 transition-all duration-300"
                 size="sm"
               >
                 <User className="h-4 w-4 mr-2" />

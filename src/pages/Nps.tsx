@@ -5,8 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/components/ui/use-toast';
+
+// Mock data for demo
+const mockNpsData = [
+  {
+    nps_id: 1,
+    pran: 'NPS123456789',
+    contribution: 50000,
+    returns: 8.5,
+    scheme_type: 'Tier I'
+  },
+  {
+    nps_id: 2,
+    pran: 'NPS987654321',
+    contribution: 75000,
+    returns: 9.2,
+    scheme_type: 'Tier II'
+  }
+];
 
 const NpsPage = () => {
   const { toast } = useToast();
@@ -30,25 +47,11 @@ const NpsPage = () => {
           return;
         }
 
-        // Convert string customerId to number for database comparison
-        const customerIdNumber = parseInt(customerId, 10);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Fetch NPS data for customer
-        const { data, error } = await supabase
-          .from('nps')
-          .select('*')
-          .eq('customer_id', customerIdNumber);
-          
-        if (error) {
-          console.error("NPS fetch error:", error);
-          toast({
-            variant: "destructive",
-            title: "Data Loading Error",
-            description: "Failed to load NPS data",
-          });
-        } else if (data) {
-          setNpsData(data);
-        }
+        // Use mock data
+        setNpsData(mockNpsData);
       } catch (error) {
         console.error("Error fetching NPS data:", error);
         toast({

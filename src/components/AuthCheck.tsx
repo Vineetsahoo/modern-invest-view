@@ -1,7 +1,8 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from './ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AuthCheckProps {
   children: React.ReactNode;
@@ -10,30 +11,26 @@ interface AuthCheckProps {
 export const AuthCheck: React.FC<AuthCheckProps> = ({ children }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    const customerID = sessionStorage.getItem('customer_id');
-    
-    if (!customerID) {
+    if (loading) return;
+
+    if (!user) {
       toast({
         variant: "destructive",
         title: "Authentication Required",
         description: "Please log in to access this page",
       });
       navigate('/');
-      setIsAuthenticated(false);
-    } else {
-      setIsAuthenticated(true);
     }
-  }, [navigate, toast]);
+  }, [loading, user, navigate, toast]);
 
-  if (isAuthenticated === null) {
-    // Still checking authentication
+  if (loading) {
     return <div className="min-h-screen bg-banking-darkBg flex items-center justify-center">
       <div className="animate-pulse text-banking-white">Loading...</div>
     </div>;
   }
 
-  return isAuthenticated ? <>{children}</> : null;
+  return user ? <>{children}</> : null;
 };

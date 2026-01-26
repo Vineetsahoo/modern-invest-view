@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/components/ui/use-toast';
 
 interface BranchDetailsProps {
@@ -25,36 +24,11 @@ export const BranchDetails: React.FC<BranchDetailsProps> = ({ branchDetails: def
       
       setLoading(true);
       try {
-        const customerIdNumber = parseInt(customerId, 10);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // First, get the account associated with the customer
-        const { data: accountData, error: accountError } = await supabase
-          .from('account')
-          .select('*')
-          .eq('customer_id', customerIdNumber)
-          .single();
-          
-        if (accountError) {
-          console.error("Account fetch error:", accountError);
-          return;
-        }
-
-        // Since account doesn't have branch_id, get branch data directly
-        const { data: branchData, error: branchError } = await supabase
-          .from('branch')
-          .select('*')
-          .limit(1)
-          .single();
-          
-        if (branchError) {
-          console.error("Branch fetch error:", branchError);
-        } else if (branchData) {
-          setBranchDetails({
-            branchId: branchData.branch_id.toString(),
-            name: branchData.name,
-            ifscCode: branchData.ifsc_code
-          });
-        }
+        // Mock data - in production, fetch from your API
+        setBranchDetails(defaultBranchDetails);
       } catch (error) {
         console.error("Error fetching branch data:", error);
         toast({

@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from '@/components/ui/use-toast';
 
 interface RegulatoryDetailsProps {
@@ -26,44 +25,11 @@ export const RegulatoryDetails: React.FC<RegulatoryDetailsProps> = ({ regulatory
       
       setLoading(true);
       try {
-        const customerIdNumber = parseInt(customerId, 10);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Get a default country if customer doesn't have one
-        let country = 'India'; // Default value
-        
-        // Try to fetch regulatory body for the country
-        const { data: regulatoryData, error: regulatoryError } = await supabase
-          .from('regulatory_body')
-          .select('*')
-          .eq('country', country)
-          .single();
-          
-        if (regulatoryError) {
-          console.error("Regulatory fetch error:", regulatoryError);
-          
-          // If no exact match, try to get any regulatory body
-          const { data: anyRegData, error: anyRegError } = await supabase
-            .from('regulatory_body')
-            .select('*')
-            .limit(1)
-            .single();
-            
-          if (!anyRegError && anyRegData) {
-            setRegulatoryDetails({
-              regulatoryId: anyRegData.regulatory_id.toString(),
-              name: anyRegData.name,
-              country: anyRegData.country,
-              regulations: anyRegData.regulation
-            });
-          }
-        } else if (regulatoryData) {
-          setRegulatoryDetails({
-            regulatoryId: regulatoryData.regulatory_id.toString(),
-            name: regulatoryData.name,
-            country: regulatoryData.country,
-            regulations: regulatoryData.regulation
-          });
-        }
+        // Mock data - in production, fetch from your API
+        setRegulatoryDetails(defaultRegulatoryDetails);
       } catch (error) {
         console.error("Error fetching regulatory data:", error);
         toast({
