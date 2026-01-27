@@ -4,6 +4,7 @@ const PriceQuote = require('../models/PriceQuote');
 
 const positionAccumulator = (transactions) => {
   const positions = new Map();
+  const taxLots = new Map(); // Track individual tax lots
 
   const getPos = (symbol, assetType) => {
     if (!positions.has(symbol)) {
@@ -15,8 +16,13 @@ const positionAccumulator = (transactions) => {
         avgCost: 0,
         realizedPnl: 0,
         income: 0,
-        fees: 0
+        fees: 0,
+        // Capital gains tracking
+        shortTermGains: 0,
+        longTermGains: 0,
+        taxLots: []
       });
+      taxLots.set(symbol, []);
     }
     return positions.get(symbol);
   };
@@ -24,6 +30,7 @@ const positionAccumulator = (transactions) => {
   transactions.forEach((txn) => {
     const symbol = txn.symbol.toUpperCase();
     const pos = getPos(symbol, txn.assetType);
+    const lots = taxLots.get(symbol);
     const qty = Number(txn.qty || 0);
     const price = Number(txn.price || 0);
     const fees = Number(txn.fees || 0);
@@ -36,17 +43,60 @@ const positionAccumulator = (transactions) => {
         pos.costBasis += costAdd;
         pos.avgCost = pos.qty ? pos.costBasis / pos.qty : 0;
         pos.fees += fees;
+        
+        // Create tax lot
+        const lotId = txn.taxLotId || txn._id.toString();
+        lots.push({
+          lotId,
+          symbol,
+          qty,
+          price,
+          fees,
+          costBasis: costAdd,
+          acquisitionDate: txn.tradeDate,
+          remaining: qty
+        });
+        pos.taxLots = lots;
         break;
       }
       case 'SELL':
       case 'TRANSFER_OUT': {
-        const sellQty = Math.min(qty, pos.qty || qty);
-        const proceeds = sellQty * price - fees;
-        const cost = sellQty * (pos.avgCost || 0);
-        pos.qty = Math.max(0, (pos.qty || 0) - sellQty);
-        pos.costBasis = pos.qty ? pos.avgCost * pos.qty : 0;
-        pos.realizedPnl += proceeds - cost;
+        let remainingToSell = qty;
+        const proceeds = qty * price - fees;
+        let totalCost = 0;
+        const today = new Date();
+        
+        // Use tax lots (FIFO by default) to calculate gains
+        for (let i = 0; i < lots.length && remainingToSell > 0; i++) {
+          const lot = lots[i];
+          if (lot.remaining <= 0) continue;
+          
+          const sellFromLot = Math.min(lot.remaining, remainingToSell);
+          const lotCost = (lot.costBasis / lot.qty) * sellFromLot;
+          totalCost += lotCost;
+          
+          // Calculate holding period
+          const holdingPeriod = Math.floor((today - new Date(lot.acquisitionDate)) / (1000 * 60 * 60 * 24));
+          const isLongTerm = holdingPeriod > 365;
+          
+          const gain = ((price * sellFromLot) - lotCost);
+          
+          if (isLongTerm) {
+            pos.longTermGains += gain;
+          } else {
+            pos.shortTermGains += gain;
+          }
+          
+          lot.remaining -= sellFromLot;
+          remainingToSell -= sellFromLot;
+        }
+        
+        pos.qty = Math.max(0, pos.qty - qty);
+        pos.costBasis = lots.reduce((sum, lot) => sum + (lot.costBasis / lot.qty) * lot.remaining, 0);
+        pos.avgCost = pos.qty ? pos.costBasis / pos.qty : 0;
+        pos.realizedPnl += proceeds - totalCost - fees;
         pos.fees += fees;
+        pos.taxLots = lots.filter(lot => lot.remaining > 0);
         break;
       }
       case 'DIVIDEND':
@@ -84,7 +134,9 @@ const computeCurrentValues = async (positions) => {
     unrealizedPnl: 0,
     realizedPnl: 0,
     income: 0,
-    fees: 0
+    fees: 0,
+    shortTermGains: 0,
+    longTermGains: 0
   };
 
   const positionsWithValue = positions.map((p) => {
@@ -99,6 +151,8 @@ const computeCurrentValues = async (positions) => {
     totals.realizedPnl += p.realizedPnl || 0;
     totals.income += p.income || 0;
     totals.fees += p.fees || 0;
+    totals.shortTermGains += p.shortTermGains || 0;
+    totals.longTermGains += p.longTermGains || 0;
 
     if (!byAssetType[p.assetType]) {
       byAssetType[p.assetType] = {

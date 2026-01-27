@@ -1,6 +1,8 @@
 const PriceAlert = require('../models/PriceAlert');
 const Watchlist = require('../models/Watchlist');
 const PriceQuote = require('../models/PriceQuote');
+const User = require('../models/User');
+const { sendPriceAlertEmail } = require('../services/notificationService');
 
 // Get all alerts for the user
 const getAlerts = async (req, res) => {
@@ -187,6 +189,20 @@ const checkAlerts = async (req, res) => {
           triggeredPrice: currentPrice,
           message: alert.message
         });
+        
+        // Send notification
+        if (alert.notificationMethod !== 'IN_APP') {
+          try {
+            const user = await User.findById(alert.userId);
+            if (user && user.email) {
+              await sendPriceAlertEmail(user.email, alert);
+              alert.notificationSent = true;
+              await alert.save();
+            }
+          } catch (notifError) {
+            console.error(`[ALERT] Failed to send notification for alert ${alert._id}:`, notifError.message);
+          }
+        }
       }
     }
     
