@@ -13,6 +13,8 @@ const quoteRoutes = require('./routes/quoteRoutes');
 const historicalPriceRoutes = require('./routes/historicalPriceRoutes');
 const snapshotRoutes = require('./routes/snapshotRoutes');
 const alertRoutes = require('./routes/alertRoutes');
+const taxRoutes = require('./routes/taxRoutes');
+const importRoutes = require('./routes/importRoutes');
 
 // Scheduled jobs
 const { initScheduledJobs } = require('./jobs/scheduledJobs');
@@ -43,6 +45,8 @@ app.use('/api/investments', investmentRoutes);
 app.use('/api/portfolios', portfolioRoutes);
 app.use('/api/portfolios/:portfolioId/transactions', transactionRoutes);
 app.use('/api/portfolios/:portfolioId/snapshots', snapshotRoutes);
+app.use('/api/portfolios/:portfolioId/tax-summary', taxRoutes);
+app.use('/api/portfolios/:portfolioId/import', importRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/quotes', quoteRoutes);
 app.use('/api/prices', historicalPriceRoutes);
